@@ -110,26 +110,6 @@ AUDIT RESULT: 100% OF RESUME CLAIMS MATHEMATICALLY VERIFIED AND DEFENDED.
 
 ---
 
-## Architectural Event Lifecycle
-
-```text
-                               DAILY MARKET SESSION (09:00 - 15:30 IST)
-                               
-   09:00 AM                        09:15 AM                        15:15 PM                        15:30 PM
-[Pre-Open Snapshot]           [Market Open Fill]             [Intraday Risk/Exit]             [EOD MTM Audit]
-        │                              │                               │                              │
-• Snapshot prior close         • Allocate Slots 1..3           • Evaluate ATR Stops           • Mark all active bars
-• Calculate pre-open equity    • Enforce Integer Shares        • Gap-Through Fill Execution   • Total Equity = Cash+MTM
-• Pre-Market Cash Lock         • Cap at 10% 20D-ADV            • Circuit Rollover Logic       • Compute Peak & Drawdown
-```
-
-To run a live demonstration of the event-driven state machine simulating sample market bars:
-```bash
-python run_backtest_demo.py
-```
-
----
-
 ## Institutional Statutory Friction Schedule
 
 All trades are modeled under Indian cash equity regulations ($T+1$ rolling delivery):
