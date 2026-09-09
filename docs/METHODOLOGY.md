@@ -11,7 +11,7 @@ The empirical universe comprises equities actively listed on the **Bombay Stock 
    - Historical 20-Day Average Daily Volume: $\text{ADV}_{20} \ge 100,000$ shares.
    - Minimum Share Price: $P_{\text{close}} \ge \text{INR } 50.00$ (eliminates micro-penny stocks and extreme tick distortions).
    - Non-Circuit Auction Spread: $P_{\text{high}} \ne P_{\text{low}}$ on event evaluation date.
-   - Gap Anomaly Guard: $|\text{Gap Pct}| \le 15.0\%$ (prevents extreme corporate restructuring artifacts).
+   - Corporate Restructuring Guard: Excludes corporate restructuring and delisting halts.
    - Execution Causality: Announcements strictly released post-market ($\ge 16:00\text{ IST}$) or pre-market ($< 09:00\text{ IST}$).
 
 ---

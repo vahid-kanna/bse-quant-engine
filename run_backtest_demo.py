@@ -4,6 +4,7 @@ Quickstart Backtesting Engine Demo
 Runs an illustrative multi-session simulation exercising the core event-driven
 architecture: pre-open snapshots, integer shares, gap-through stop execution,
 statutory friction deduction, and true daily MTM accounting.
+Uses synthetic normalized test assets (zero real market/strategy data).
 """
 
 from core.engine import EventDrivenEngine
@@ -16,70 +17,70 @@ def main():
     
     engine = EventDrivenEngine(initial_capital=100000.0, max_slots=3, slippage_bps=60.0)
     
-    # Simulate 3 daily sessions with sample market data
+    # Simulate 3 daily sessions with synthetic normalized test assets
     sessions = [
         {
             "date": "2026-03-02",
             "bars": {
-                "TCS": BarData(open=3850.0, high=3920.0, low=3840.0, close=3905.0, volume=1200000),
-                "INFY": BarData(open=1620.0, high=1645.0, low=1610.0, close=1638.0, volume=2500000),
-                "RELIANCE": BarData(open=2950.0, high=2980.0, low=2930.0, close=2940.0, volume=3100000),
+                "ASSET_A": BarData(open=500.0, high=515.0, low=498.0, close=510.0, volume=1000000),
+                "ASSET_B": BarData(open=250.0, high=258.0, low=248.0, close=255.0, volume=1500000),
+                "ASSET_C": BarData(open=750.0, high=760.0, low=740.0, close=745.0, volume=2000000),
             },
             "signals": [
                 {
-                    "ticker": "TCS",
-                    "company": "Tata Consultancy Services Ltd",
-                    "signal_name": "Alpha-1 (Oversold Mean Reversion)",
+                    "ticker": "ASSET_A",
+                    "company": "Synthetic Liquid Equity A",
+                    "signal_name": "DEMO_SETUP_1",
                     "hold_target": 2,
                     "exit_mode": "NONE",
                     "sl_mult": None,
                     "tp_mult": None,
-                    "atr_pct": 0.015,
-                    "prev_close": 3845.0,
-                    "avg_vol_20d": 1200000
+                    "atr_pct": 0.02,
+                    "prev_close": 498.0,
+                    "avg_vol_20d": 1000000
                 },
                 {
-                    "ticker": "INFY",
-                    "company": "Infosys Ltd",
-                    "signal_name": "Alpha-2 (Structural Momentum Dip)",
+                    "ticker": "ASSET_B",
+                    "company": "Synthetic Liquid Equity B",
+                    "signal_name": "DEMO_SETUP_2",
                     "hold_target": 1,
                     "exit_mode": "NONE",
                     "sl_mult": None,
                     "tp_mult": None,
-                    "atr_pct": 0.018,
-                    "prev_close": 1615.0,
-                    "avg_vol_20d": 2500000
+                    "atr_pct": 0.02,
+                    "prev_close": 249.0,
+                    "avg_vol_20d": 1500000
                 }
             ]
         },
         {
             "date": "2026-03-03",
             "bars": {
-                "TCS": BarData(open=3910.0, high=3950.0, low=3890.0, close=3935.0, volume=1100000),
-                "INFY": BarData(open=1640.0, high=1670.0, low=1635.0, close=1665.0, volume=2400000),
-                "RELIANCE": BarData(open=2945.0, high=2990.0, low=2940.0, close=2985.0, volume=2800000),
+                "ASSET_A": BarData(open=512.0, high=520.0, low=508.0, close=518.0, volume=950000),
+                "ASSET_B": BarData(open=256.0, high=260.0, low=254.0, close=259.0, volume=1400000),
+                "ASSET_C": BarData(open=748.0, high=765.0, low=745.0, close=762.0, volume=1800000),
             },
             "signals": [
                 {
-                    "ticker": "RELIANCE",
-                    "company": "Reliance Industries Ltd",
-                    "signal_name": "Alpha-3 (Regulatory Catalyst Breakout)",
+                    "ticker": "ASSET_C",
+                    "company": "Synthetic Liquid Equity C",
+                    "signal_name": "DEMO_SETUP_3",
                     "hold_target": 1,
                     "exit_mode": "TP",
                     "sl_mult": 1.0,
                     "tp_mult": 2.0,
-                    "atr_pct": 0.016,
-                    "prev_close": 2940.0,
-                    "avg_vol_20d": 3100000
+                    "atr_pct": 0.02,
+                    "prev_close": 745.0,
+                    "avg_vol_20d": 1800000
                 }
             ]
         },
         {
             "date": "2026-03-04",
             "bars": {
-                "TCS": BarData(open=3940.0, high=3980.0, low=3925.0, close=3960.0, volume=980000),
-                "INFY": BarData(open=1660.0, high=1675.0, low=1650.0, close=1655.0, volume=1900000),
-                "RELIANCE": BarData(open=3010.0, high=3030.0, low=2995.0, close=3025.0, volume=2600000),
+                "ASSET_A": BarData(open=519.0, high=525.0, low=516.0, close=522.0, volume=900000),
+                "ASSET_B": BarData(open=260.0, high=264.0, low=258.0, close=262.0, volume=1300000),
+                "ASSET_C": BarData(open=765.0, high=772.0, low=760.0, close=770.0, volume=1700000),
             },
             "signals": []
         }
@@ -101,7 +102,7 @@ def main():
     print("COMPLETED TRADES LOG:")
     print("-" * 75)
     for t in engine.completed_trades:
-        print(f"Trade #{t['trade_num']} | {t['ticker']:8s} | Signal: {t['signal']} | "
+        print(f"Trade #{t['trade_num']} | {t['ticker']:8s} | Setup: {t['signal']} | "
               f"Net Ret: {t['net_return_pct']:+5.2f}% | PnL: INR {t['pnl_inr']:+8.2f} | "
               f"Frictions: INR {t['frictions_inr']:6.2f}")
               

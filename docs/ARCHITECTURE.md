@@ -13,7 +13,7 @@ The framework models discrete event dynamics on Indian cash equity markets (BSE/
           |                              |                               |                              |
   • Snapshot F_{t-} Marks        • Allocate Slots 1..3           • Evaluate ATR Stops            • Mark All Open Bars
   • Lock Pre-Market Cash         • Apply Discrete Shares         • Gap-Through Fill Check        • Compute Daily MTM
-  • Prioritize via Elasticity    • Cap at 10% 20D-ADV            • Circuit Rollover Logic        • Record Peak & MDD
+  • Causal Priority Queue        • Cap at 10% 20D-ADV            • Circuit Rollover Logic        • Record Peak & MDD
 ```
 
 ---

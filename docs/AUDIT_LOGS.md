@@ -43,7 +43,7 @@ The quantitative engine underwent ten evolutionary research phases and five majo
 
 | # | Bias / Structural Vulnerability | Legacy Implementation Flaw | Config E Production Remedy |
 | :-: | :--- | :--- | :--- |
-| **1** | **Signal Deduplication Lookahead** | Sorted same-day competing signals by realized net return (`Net_Ret`). | Replaced with causal Priority and pre-market Elasticity ranking before market open. |
+| **1** | **Signal Deduplication Lookahead** | Sorted same-day competing signals by realized net return (`Net_Ret`). | Replaced with causal pre-market priority queue before market open. |
 | **2** | **Liquidity Sizing Lookahead** | Sized order limits using execution-day traded volume. | Restricted participation ceilings strictly to historical 20-day ADV ($\text{ADV}_{20}$) and $T_{-1}$ close. |
 | **3** | **Announcement Timestamp Leak** | Parsed intraday regulatory announcements without execution delay. | Enforced strict post-market ($>16:00$) / pre-market ($<09:00$) filtering; execution shifted to next open. |
 | **4** | **In-Sample Dynamic Sizing Bias** | Applied Kelly Criterion sizing derived from full-sample win rates. | Enforced equal-weight discrete slot allocation ($33.3\%$ per slot) with pre-open cash locking. |

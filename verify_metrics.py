@@ -149,7 +149,7 @@ def print_audit_report(data_dir):
     print(f"  Statutory Friction Pd: INR {res_24m['frictions']:,.2f}")
     
     print("\n[PART 3: RESUME BULLET #2 AUDIT (ELIMINATION OF 6 LOOKAHEAD BIASES)]")
-    print("  1. Signal Deduplication: Priority/Elasticity ranking replaces return-sorted dedup.")
+    print("  1. Signal Deduplication: Causal priority queue replaces return-sorted lookahead.")
     print("  2. Volume / Liquidity:   Sizing strictly bounded by historical ADV20 and T-1 Close.")
     print("  3. Announcement Timing:  Enforced post-market/pre-market causality; zero intraday leak.")
     print("  4. Sizing Model:         Strict pre-open equal slot allocation (eliminates Kelly bias).")

@@ -1,29 +1,26 @@
-MIT License
+PROPRIETARY RESEARCH & EVALUATION LICENSE
 
-Copyright (c) 2026 Shaik Vahid Basha
+Copyright (c) 2026 Shaik Vahid Basha. All Rights Reserved.
+Indian Institute of Technology Madras (IIT Madras)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Permitted Use:
+Permission is hereby granted, free of charge, to any recruiter, academic reviewer,
+or prospective employer to view, inspect, download, and execute the verification
+harnesses contained in this repository strictly for the purpose of candidate evaluation,
+academic credential verification, and non-commercial technical audit.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. Restrictions:
+- The proprietary quantitative research, alpha concepts, execution models, and
+  methodologies represented herein may not be copied, reproduced, modified, republished,
+  or commercially exploited in any form without express written consent of the author.
+- Reverse engineering, algorithmic decompilation, or automated scraping of the
+  execution datasets for commercial trade execution or signal reconstruction is
+  strictly prohibited.
+- No commercial license or patent rights are granted or implied.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----
-Notice of Intellectual Property:
-The execution engine, statutory friction framework, risk allocation interfaces,
-and reproducible verification test harnesses published in this repository are
-open-source under the MIT License. Proprietary predictive alpha models, NLP
-catalyst taxonomies, and quantitative indicator weighting vectors developed by
-the author are retained as confidential trade secrets.
+3. Disclaimer:
+THE SOFTWARE AND DATA ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE USE
+OR EVALUATION OF THIS WORK.

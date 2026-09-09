@@ -4,7 +4,7 @@
 [![Verification Audit](https://img.shields.io/badge/Verification%20Audit-PASSING%20(100%25%20Verified)-brightgreen.svg)](verify_metrics.py)
 [![Settlement](https://img.shields.io/badge/Settlement-T%2B1%20Rolling%20Delivery-orange.svg)](docs/ARCHITECTURE.md)
 [![Friction Model](https://img.shields.io/badge/Friction-60%20bps%20%2B%20Full%20Statutory%20Taxes-red.svg)](docs/ARCHITECTURE.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![License: Proprietary Research](https://img.shields.io/badge/License-Proprietary%20Research-red.svg)](LICENSE)
 
 > **Institutional-grade causal backtesting and execution engine modeling statutory frictions, gap-through stop fills, discrete integer shares, and point-in-time mark-to-market accounting for Indian cash equities (Bombay Stock Exchange).**
 
@@ -91,7 +91,7 @@ Architecture: Event-Driven Causal Backtester (Pre-Open Snapshots, Gap Execution)
   Statutory Friction Pd: INR 20,483.39
 
 [PART 3: RESUME BULLET #2 AUDIT (ELIMINATION OF 6 LOOKAHEAD BIASES)]
-  1. Signal Deduplication: Priority/Elasticity ranking replaces return-sorted dedup.
+  1. Signal Deduplication: Causal priority queue replaces return-sorted lookahead.
   2. Volume / Liquidity:   Sizing strictly bounded by historical ADV20 and T-1 Close.
   3. Announcement Timing:  Enforced post-market/pre-market causality; zero intraday leak.
   4. Sizing Model:         Strict pre-open equal slot allocation (eliminates Kelly bias).
@@ -174,7 +174,7 @@ bse-quant-engine/
 ├── run_backtest_demo.py          # Interactive execution engine demo
 ├── requirements.txt              # Optional dependencies for extended data analysis
 ├── .gitignore                    # Git configuration
-├── LICENSE                       # MIT License
+├── LICENSE                       # Proprietary Research License
 └── README.md                     # Institutional documentation
 ```
 
