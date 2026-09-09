@@ -1,0 +1,49 @@
+{
+  "engine_version": "Config E (Flawless Event-Driven Architecture)",
+  "statutory_friction_model": {
+    "slippage_bps": 60,
+    "delivery_stt_buy_pct": 0.1,
+    "delivery_stt_sell_pct": 0.1,
+    "stamp_duty_buy_pct": 0.015,
+    "exchange_turnover_fee_pct": 0.00345,
+    "sebi_fee_pct": 0.0001,
+    "brokerage_per_leg_inr": 20.0,
+    "gst_rate_pct": 18.0,
+    "dp_charge_per_sell_inr": 15.93,
+    "settlement_cycle": "T+1 Delivery",
+    "lot_sizing": "Strict Integer Shares",
+    "execution_timing": "09:15 AM Pre-Open Cash Lock",
+    "stop_loss_execution": "Realistic Gap-Through Slippage"
+  },
+  "metrics_12m_oos": {
+    "start_date": "2025-08-26",
+    "end_date": "2026-08-04",
+    "initial_capital_inr": 100000.0,
+    "final_equity_inr": 143577.38,
+    "net_roi_pct": 43.58,
+    "profit_factor": 2.96,
+    "win_rate_pct": 59.0,
+    "winning_trades": 36,
+    "losing_trades": 25,
+    "total_trades": 61,
+    "max_drawdown_pct": 4.64,
+    "calmar_ratio": 9.4,
+    "total_frictions_paid_inr": 9093.21
+  },
+  "metrics_24m_horizon": {
+    "start_date": "2024-08-26",
+    "end_date": "2026-08-04",
+    "initial_capital_inr": 100000.0,
+    "final_equity_inr": 223727.35,
+    "net_roi_pct": 123.73,
+    "annualized_cagr_pct": 51.41,
+    "profit_factor": 3.26,
+    "win_rate_pct": 63.6,
+    "winning_trades": 75,
+    "losing_trades": 43,
+    "total_trades": 118,
+    "max_drawdown_pct": 6.91,
+    "calmar_ratio": 7.44,
+    "total_frictions_paid_inr": 20483.39
+  }
+}
