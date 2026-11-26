@@ -16,9 +16,7 @@ Asking an LLM to write a trading backtest in one prompt usually produces flatter
 
 ### 1. Hypothesis mining across 857,928 corporate filings
 
-The research began with manual observations logged in a desktop note and five spreadsheets tracking BSE and NSE corporate announcements alongside multi-day price reactions. From those initial patterns, automated ingestion scripts scaled the dataset from 37,426 filings in July 2026 to 857,928 raw corporate announcements across 5,467 BSE tickers (`2023-12-15` to `2026-08-04`).
-
-Deterministic filters cleaned the raw feed before feature generation:
+The research began with manual observations logged in a desktop note and five spreadsheets tracking BSE and NSE corporate announcements alongside multi-day price reactions. Coding agents synthesized those domain notes into automated BSE crawlers and candidate regex/NLP classifiers, scaling ingestion from 37,426 filings in July 2026 to 857,928 raw corporate announcements across 5,467 BSE tickers (`2023-12-15` to `2026-08-04`). Deterministic Python filters then cleaned and tagged the raw feed before signal testing:
 
 - Exchange dissemination timestamps bucketed filings into `PRE_MARKET`, `POST_MARKET`, and `INTRADAY`, blocking intraday releases so decisions on date $t$ depend only on pre-open information $F_{t-}$.
 - Liquidity and price gates excluded micro-cap distortion ($P_{\text{close}} \ge \text{INR } 50.00$, 20-day average daily volume $\ge 100,000$ shares, and non-circuit session spread $P_{\text{high}} \ne P_{\text{low}}$).
@@ -28,11 +26,11 @@ Deduplication and timestamp filtering left 345,143 clean causal stock-date pairs
 
 ### 2. Iterative refinement and negative-signal pruning
 
-Rather than defending early high-Sharpe prototypes, each iteration killed models when realistic market rules broke them:
+AI agents generated multi-wave backtest loops, execution variants, and parameter sweeps across four development cycles. Rather than defending high-Sharpe prototypes, each cycle ran programmatic AI self-critique passes to falsify flattering models before external multi-model auditing even started:
 
-- Early self-audits (`deep_self_audit.py`, August 2026) uncovered INR 21,087 of phantom intraday stop gains, sub-INR 50 stocks falsely treated as margin-eligible, and keyword misclassifications in filing headlines.
-- Comparative backtests tested shorting LODR Regulation 30 clarification spikes against long post-announcement setups, then pivoted to long-only post-selloff and catalyst setups because Indian cash equities lack practical overnight shorting outside F&O.
-- An audit of the 10-generation evolutionary search loop (`critical_flaw_audit_gen10.py`) found that 4 of 10 generations were effective no-ops and flagged `Prior_RVOL` confounding, triggering a clean rebuild.
+- Self-audit scripts (`deep_self_audit.py`, August 2026) inspected early winning trades and uncovered INR 21,087 of phantom intraday stop gains, sub-INR 50 stocks falsely treated as margin-eligible, and keyword misclassifications in filing headlines.
+- AI-generated comparative backtests tested shorting LODR Regulation 30 clarification spikes against long post-announcement setups, then pivoted to long-only post-selloff and catalyst setups because Indian cash equities lack practical overnight shorting outside F&O.
+- A self-critique pass over the 10-generation evolutionary search loop (`critical_flaw_audit_gen10.py`) showed that 4 of 10 AI-iterated generations were effective no-ops and exposed `Prior_RVOL` confounding, triggering a clean rebuild.
 - Equal 3-slot capital allocation (`pre_open_equity / 3`, capped at 10% of 20-day average dollar volume, integer shares, INR 5,000 minimum order, and 0% idle-cash yield after rejecting 6.5% p.a. cash-sweep assumptions) replaced full-sample Kelly sizing, paired with pre-open Elasticity ranking:
   $$\text{Elasticity} = \frac{\text{Prior\_RVOL} \times |\text{Gap\_Pct}|}{\text{ATR\_Pct}}$$
 - Trade-level attribution pruned a fourth satellite setup (`SMA50_DEEP_DIP_1D`) after it lost `-INR 4,060.87` (`0.663` profit factor) net of Indian delivery costs.
