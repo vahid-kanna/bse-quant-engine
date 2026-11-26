@@ -6,58 +6,135 @@
 [![Friction Model](https://img.shields.io/badge/Friction-60%20bps%20%2B%20Full%20Statutory%20Taxes-red.svg)](docs/ARCHITECTURE.md)
 [![License: Proprietary Research](https://img.shields.io/badge/License-Proprietary%20Research-red.svg)](LICENSE)
 
-> **Institutional-grade causal backtesting and execution engine modeling statutory frictions, gap-through stop fills, discrete integer shares, and point-in-time mark-to-market accounting for Indian cash equities (Bombay Stock Exchange).**
+Causal event-driven backtesting engine for Indian cash equities on the Bombay Stock Exchange (BSE), engineered between July and September 2026 through an iterative human-AI research and adversarial red-teaming workflow.
+
+Asking an LLM to write a trading backtest in one prompt usually produces flattering code full of silent lookahead leaks, calendar bugs, and missing transaction costs. To avoid self-deception, this project splits the work into two strict layers: AI agents handled regulatory filing exploration, strategy iteration, and adversarial code auditing, while deterministic Python handles execution, statutory cost accounting, and verification.
 
 ---
 
-## Executive Summary
+## How AI drove the engineering workflow
 
-The **BSE Quant Engine (Config E)** was engineered from the ground up to solve the critical flaw of quantitative strategy research: **backtest optimism caused by lookahead bias and microstructure friction under-modeling**.
+### 1. Hypothesis mining across 857,928 corporate filings
 
-Through ten evolutionary research generations and exhaustive forensic auditing, the engine:
-1. **Parsed and analyzed 857,928 corporate regulatory announcements** from the Bombay Stock Exchange (BSE), filtering to 345,143 clean, causal stock-date pairs across 3,377 listed securities.
-2. **Evaluated 301,000+ test configurations** across parameter search grids, controlling family-wise error rates using the **Benjamini-Hochberg False Discovery Rate (FDR)** algorithm to isolate 3 statistically robust structural alpha setups.
-3. **Eliminated 6 subtle lookahead biases and execution flaws** (including signal deduplication ranking, announcement timestamp leaks, intraday vs delivery STT mismatches, Kelly sizing lookahead, and unmodeled depository charges).
-4. **Engineered complete execution realism**: Enforcing pre-open capital snapshots ($F_{t-}$), discrete integer share sizing, pre-market cash locks, realistic gap-through stop execution, circuit freeze rollovers, $60\text{ bps}$ slippage, and full Indian statutory taxes (STT, Stamp Duty, Brokerage, GST, SEBI, and CDSL DP fees).
+The research began with manual observations logged in a desktop note and five spreadsheets tracking BSE and NSE corporate announcements alongside multi-day price reactions. From those initial patterns, automated ingestion scripts scaled the dataset from 37,426 filings in July 2026 to 857,928 raw corporate announcements across 5,467 BSE tickers (`2023-12-15` to `2026-08-04`).
+
+Deterministic filters cleaned the raw feed before feature generation:
+
+- Exchange dissemination timestamps bucketed filings into `PRE_MARKET`, `POST_MARKET`, and `INTRADAY`, blocking intraday releases so decisions on date $t$ depend only on pre-open information $F_{t-}$.
+- Liquidity and price gates excluded micro-cap distortion ($P_{\text{close}} \ge \text{INR } 50.00$, 20-day average daily volume $\ge 100,000$ shares, and non-circuit session spread $P_{\text{high}} \ne P_{\text{low}}$).
+- A deterministic regex and NLP taxonomy classified filings across SAST Regulation 31 promoter pledges, LODR Regulation 30 price clarifications, dilution and QIP events, open offers, credit approvals, order wins, and quarterly financial results.
+
+Deduplication and timestamp filtering left 345,143 clean causal stock-date pairs across 3,377 securities. Across those pairs, grid evaluation tested 526 signal variations over 303,402 test instances (cited conservatively as 301,000+ tests in `verify_metrics.py`). Applying Benjamini-Hochberg False Discovery Rate control ($Q = 0.10$) rejected 523 candidates and kept 3 statistical setups ($p < 0.01$), abstracted as `SETUP_1`, `SETUP_2`, and `SETUP_3` in the public ledgers.
+
+### 2. Iterative refinement and negative-signal pruning
+
+Rather than defending early high-Sharpe prototypes, each iteration killed models when realistic market rules broke them:
+
+- Early self-audits (`deep_self_audit.py`, August 2026) uncovered INR 21,087 of phantom intraday stop gains, sub-INR 50 stocks falsely treated as margin-eligible, and keyword misclassifications in filing headlines.
+- Comparative backtests tested shorting LODR Regulation 30 clarification spikes against long post-announcement setups, then pivoted to long-only post-selloff and catalyst setups because Indian cash equities lack practical overnight shorting outside F&O.
+- An audit of the 10-generation evolutionary search loop (`critical_flaw_audit_gen10.py`) found that 4 of 10 generations were effective no-ops and flagged `Prior_RVOL` confounding, triggering a clean rebuild.
+- Equal 3-slot capital allocation (`pre_open_equity / 3`, capped at 10% of 20-day average dollar volume, integer shares, INR 5,000 minimum order, and 0% idle-cash yield after rejecting 6.5% p.a. cash-sweep assumptions) replaced full-sample Kelly sizing, paired with pre-open Elasticity ranking:
+  $$\text{Elasticity} = \frac{\text{Prior\_RVOL} \times |\text{Gap\_Pct}|}{\text{ATR\_Pct}}$$
+- Trade-level attribution pruned a fourth satellite setup (`SMA50_DEEP_DIP_1D`) after it lost `-INR 4,060.87` (`0.663` profit factor) net of Indian delivery costs.
+
+### 3. Multi-agent red-teaming and custom CDP tooling
+
+When a pre-audit prototype (`Config E-Pro`) printed `+50%` ROI with `4.2%` max drawdown, a multi-model adversarial audit ran against the code and trade logs rather than accepting the numbers:
+
+- A dedicated adversarial subagent (`deep_flaw_auditor`) and independent Claude Opus 4.6 verification scripts cross-checked the fee model and trade classifications, catching a `0.00375%` BSE turnover rate mismatch and reclassifying marginal net wins (lowering an earlier prototype win rate from `64.7%` to `61.8%`).
+- Because ClickUp Brain capped GPT-6 Astra usage at 25 prompts per account with no public API, a custom Chrome DevTools Protocol (CDP) WebSocket bridge (`astra_bridge.py` targeting Chromium on `127.0.0.1:9222`) automated `DOM.setFileInputFiles` uploads, rich-text prompt injection, and DOM response capture so local scripts could run multi-round code and CSV audits against GPT-6 Astra.
+
+Across three consecutive Astra audit rounds on September 6, 2026, the auditor rejected the first prototype as overfitted, rejected a second event-driven rewrite because exits still freed cash before entries inside the daily loop and daily equity still summed entry cost basis, and caught two final bugs in the third draft (an unbound dataframe variable inside the open-position MTM loop and idealized stop-loss fills on overnight gap-downs).
+
+Fixing those findings produced the final engine and resolved two distinct sets of six flaws.
+
+#### Six simulation bugs fixed in the final engine
+
+| # | Simulation bug exposed | How it distorted backtests | Fix enforced in Config E |
+| :-: | :--- | :--- | :--- |
+| 1 | Same-day capital lookahead | Exit proceeds funded `09:15` entries on the same trading day. | Strict 3-phase daily loop: pre-open snapshot and entries first, intraday/EOD exits second, EOD MTM third. |
+| 2 | Cost-basis MTM masking and `hist` leak | Equity curves used entry cost basis or an unbound loop variable across open positions. | Rebound per-ticker price history inside the daily MTM loop across every continuous session. |
+| 3 | 10 bogus holiday exits | Slicing dates from announcements triggered 10 exits across 7 closed BSE holidays. | Built the 649-session BSE calendar strictly from `Volume > 0 & High > 0 & Open > 0` across 5,467 tickers (0 holiday exits). |
+| 4 | Synthetic `Volume = 0` circuit locks | Forward-filled price rows created fake flat bars (109 tickers on `2025-10-02`) while masking real locks. | Purged `Volume <= 0` bars; retained genuine `High == Low` exit rollovers on positive volume (verified in 24M Trade `#47`). |
+| 5 | Gap-through stop illusions | Overnight gaps below a stop-loss filled at the theoretical stop mark instead of the open. | Enforced `min(sl_nominal, open)` on stop-outs and `max(tp_nominal, open)` on upside gap take-profits. |
+| 6 | Negative satellite dilution | Satellite setup `SMA50_DEEP_DIP_1D` dragged post-friction expectancy (`-INR 4,060.87`, `0.663` PF). | Pruned the satellite setup, leaving only the 3 FDR-certified setups. |
+
+#### Six pipeline lookahead biases verified by `verify_metrics.py`
+
+| # | Pipeline bias | Legacy flaw | Production constraint |
+| :-: | :--- | :--- | :--- |
+| 1 | Signal deduplication | Sorted competing same-day signals by realized `Net_Ret`. | Causal pre-open `(Priority, Elasticity)` queue. |
+| 2 | Volume and liquidity sizing | Used execution-day traded volume. | Bounded at 10% of historical `ADV20 * T-1 Close`. |
+| 3 | Announcement timing | Allowed intraday announcements without delay. | Restricted to `PRE_MARKET` and `POST_MARKET` filings. |
+| 4 | Position sizing | Used full-sample Kelly fraction. | Equal 3-slot `pre_open_equity / 3` allocation. |
+| 5 | Monte Carlo resampling | Shuffled individual trades independently, breaking crash clustering. | 5-day stationary date-block bootstrap (10,000 runs during validation). |
+| 6 | Execution and tax realism | Assumed theoretical stop fills and omitted delivery DP fees. | Gap-through open fills, 60 bps slippage, delivery STT, and CDSL DP fees. |
+
+### 4. Deterministic verification and validation scope
+
+All final engine logic and ledger assertions run in zero-dependency standard-library Python (`verify_metrics.py`, `run_backtest_demo.py`, and `.github/workflows/audit.yml`).
+
+During pre-release validation of the Config E / E-Pro pipeline, separate scripts ran a 10,000-run 5-day date-block bootstrap Monte Carlo and a market-crash stress check covering the June 4, 2024 Indian election selloff. On the finalized anonymized `data/` ledgers shipped in this repository, the checks below verify outlier concentration and circuit rollover behavior directly:
+
+| Ledger check | Scope tested | Verified outcome |
+| :--- | :--- | :--- |
+| Outlier exclusion (12M OOS) | Removed top winning trade (`Trade #18`, `+32.39%`, `+INR 10,860.43`) | Remaining 60 trades return `+INR 32,716.94` (`+32.72%` fixed-ledger ROI) at `2.47` profit factor |
+| Outlier exclusion (24M horizon) | Removed both trades on the top outlier ticker (`Trades #55` and `#75`, `+INR 2,818.79` and `+INR 16,815.75`) | Remaining 116 trades return `+INR 104,092.79` (`+104.09%` fixed-ledger ROI) at `2.90` profit factor |
+| Circuit rollover (`24M Trade #47`) | 2-day scheduled hold hit `High == Low` on active volume | Exit deferred to 4 days (`+22.33%` net return, `+INR 9,257.58`) |
 
 ---
 
-## Verified Institutional Performance Tear Sheet
+## Supporting verified results (net of statutory costs)
 
-The table below presents the mathematically verified results produced by the **Config E** engine. All metrics are calculated **strictly net of all statutory taxes, exchange fees, brokerage, CDSL DP charges, and execution slippage**.
+The metrics below are included as empirical verification that the model remained profitable after every leak fix, calendar cleanup, and fee deduction. All numbers come directly from `data/` ledgers and match `python verify_metrics.py` (649 total verified BSE sessions: 481 sessions in the 24M window and 231 sessions in the 12M out-of-sample window).
 
-| Metric | 12-Month Out-of-Sample Window<br>`(2025-08-26 to 2026-08-04)` | 24-Month Full Market Horizon<br>`(2024-08-26 to 2026-08-04)` | Verification Status |
-| :--- | :---: | :---: | :---: |
-| **Initial Capital** | $\text{INR } 100,000.00$ | $\text{INR } 100,000.00$ | **Audited Baseline** |
-| **Final Portfolio Value** | $\text{INR } 143,577.38$ | $\text{INR } 223,727.35$ | **Verified** |
-| **Net Cumulative ROI** | **$+43.58\%$** | **$+123.73\%$** | **Verified** ($+43.6\%$ on resume) |
-| **Annualized Return (CAGR)** | — | **$+51.41\%\text{ p.a.}$** | **Verified** |
-| **Win Rate (Post-Friction PnL $> 0$)**| **$59.0\%$** ($36\text{ Wins } / 25\text{ Losses}$) | **$63.6\%$** ($75\text{ Wins } / 43\text{ Losses}$) | **Verified** ($59\%$ on resume) |
-| **Profit Factor (PF)** | **$2.96$** | **$3.26$** | **Verified** ($2.96$ on resume) |
-| **True Daily MTM Max Drawdown** | **$4.64\%$** | **$6.91\%$** | **Verified** ($4.6\%$ on resume) |
-| **Calmar Ratio** | **$9.40\text{x}$** | **$7.44\text{x}$** | **Verified** ($9.4\text{x}$ on resume) |
-| **Total Executed Trades** | **$61\text{ trades}$** | **$118\text{ trades}$** | **Verified** ($61\text{ trades}$ on resume) |
-| **Total Statutory Frictions Paid** | $\text{INR } 9,093.21$ | $\text{INR } 20,483.39$ | **Verified (Deducted)** |
-| **Benchmark Net Excess Alpha** | **$+44.6\%\text{ to }+51.0\%$** vs Nifty 50 | Outperformed index by $>3.8\text{x}$ | **Verified** |
+| Metric | 12-Month Out-of-Sample<br>`2025-08-26 to 2026-08-04` | 24-Month Full Horizon<br>`2024-08-26 to 2026-08-04` | Verification source |
+| :--- | :---: | :---: | :--- |
+| Initial capital | `INR 100,000.00` | `INR 100,000.00` | Baseline |
+| Final portfolio value | `INR 143,577.38` | `INR 223,727.35` | `verify_metrics.py` |
+| Net cumulative ROI | `+43.58%` | `+123.73%` | `verify_metrics.py` |
+| Annualized return (CAGR) | N/A | `+51.41% p.a.` | `verify_metrics.py` |
+| Win rate (after costs) | `59.0%` (`36W / 25L`) | `63.6%` (`75W / 43L`) | `verify_metrics.py` |
+| Profit factor | `2.96` | `3.26` | `verify_metrics.py` |
+| Daily MTM max drawdown | `4.64%` | `6.91%` | `verify_metrics.py` |
+| Calmar ratio | `9.40x` | `7.44x` | `verify_metrics.py` |
+| Total executed trades | `61` | `118` | `data/audit_trades_*.csv` |
+| Statutory frictions paid | `INR 9,093.21` | `INR 20,483.39` | `data/audit_trades_*.csv` |
 
-*Note: The complete trade-by-trade execution ledgers and continuous daily Mark-to-Market equity logs are preserved in [`data/`](data/) for full reproducibility.*
+Complete trade-by-trade execution ledgers and daily Mark-to-Market equity curves are stored in [data/](data/).
 
 ---
 
-## Reproducible Verification (Zero-Dependency Audit)
+## Statutory friction schedule
 
-To independently verify 100% of the metrics, figures, and claims cited on the author's technical resume, run the included zero-dependency verification harness:
+All simulated trades run under Indian T+1 equity delivery settlement rules in [core/friction.py](core/friction.py) and [core/execution.py](core/execution.py):
+
+| Component | Rate / tariff | Implementation |
+| :--- | :--- | :--- |
+| Execution slippage | `60 bps` (`0.60%`) | Deducted round-trip from gross price return |
+| Securities Transaction Tax (STT) | `0.10%` buy + `0.10%` sell | Delivery STT on both transaction legs |
+| State stamp duty | `0.015%` | Charged on buy turnover |
+| Exchange turnover fee | `0.00345%` | BSE/NSE charge on total turnover |
+| SEBI turnover fee | `0.0001%` | Regulatory fee on total turnover |
+| Brokerage | `INR 20.00` per leg | Flat discount-brokerage delivery tariff (`INR 40.00` round-trip) |
+| Goods and Services Tax (GST) | `18.0%` | Applied to brokerage + exchange + SEBI fees |
+| Depository charges (DP fee) | `INR 15.93` | CDSL/NSDL debit fee per delivery sell exit |
+
+---
+
+## Reproducible verification
+
+Run the zero-dependency verification harness and the synthetic 3-asset engine demo using standard-library Python 3.8+:
 
 ```bash
-# Clone the public repository
 git clone https://github.com/vahid-kanna/bse-quant-engine.git
 cd bse-quant-engine
-
-# Run the independent verification harness (requires pure Python 3.8+, zero pip packages)
 python verify_metrics.py
+python run_backtest_demo.py
 ```
 
-### Expected Audit Verification Output
+### Expected verification output
+
 ```text
 ====================================================================================
       BSE QUANT ENGINE (CONFIG E): INDEPENDENT VERIFICATION AUDIT
@@ -110,83 +187,45 @@ AUDIT RESULT: 100% OF RESUME CLAIMS MATHEMATICALLY VERIFIED AND DEFENDED.
 
 ---
 
-## Institutional Statutory Friction Schedule
-
-All trades are modeled under Indian cash equity regulations ($T+1$ rolling delivery):
-
-| Component | Rate / Tariff | Implementation Details |
-| :--- | :--- | :--- |
-| **Execution Slippage** | $60\text{ bps}$ ($0.60\%$) | Round-trip penalty deducted from gross price returns |
-| **Securities Transaction Tax (STT)** | $0.10\%$ Buy + $0.10\%$ Sell | Statutory delivery rate on transaction value |
-| **State Stamp Duty** | $0.015\%$ | Applicable on buy leg turnover |
-| **Exchange Turnover Fee** | $0.00345\%$ | BSE/NSE transaction fee on aggregate turnover |
-| **SEBI Turnover Fee** | $0.0001\%$ ($1\text{ per crore}$) | SEBI regulatory fee |
-| **Brokerage** | $\text{INR } 20.00\text{ / leg}$ | Standard institutional discount brokerage tariff |
-| **Goods & Services Tax (GST)** | $18.0\%$ | Applied to Brokerage + Exchange Fee + SEBI Fee |
-| **Depository Charges (DP Fee)**| $\text{INR } 15.93$ | Mandatory CDSL/NSDL debit fee per delivery sell |
-
----
-
-## 🔬 Comprehensive Stress Testing & Statistical Validation Battery
-
-To verify that the engine's performance is mathematically genuine and resilient against adverse market environments, data snooping, and execution friction, the model was subjected to a comprehensive seven-tier validation battery:
-
-| # | Validation / Stress Test Category | Stress Protocol & Empirical Parameters | Empirical Outcome & Verification Verdict |
-| :-: | :--- | :--- | :--- |
-| **1** | **False Discovery Rate (FDR) Control** | Benjamini-Hochberg procedure applied across 526 alpha variations and 301,000+ tests ($Q=0.10$). | **PASSED.** Filtered 523 snooped candidates; isolated **3 statistically robust setups** ($p < 0.01$). |
-| **2** | **10,000-Run Bootstrap Monte Carlo** | 10,000 synthetic multi-year paths via stationary 5-day date-block resampling. | **PASSED.** Zero probability of ruin ($0.00\%$), 95% $\text{VaR} < 1.85\%$, positive 5th percentile return. |
-| **3** | **Black-Swan Crash Testing** | Stress-tested during the **June 4, 2024 Election Crash** (Nifty -5.93% intraday; midcaps -8% to -12%). | **PASSED.** Cash-lock and liquidity gates prevented capital destruction; max consecutive losses $\le 4$ trades. |
-| **4** | **Circuit-Freeze Rollover Audit** | Modeled illiquid limit locks ($P_{\text{high}} = P_{\text{low}}$) forbidding same-day liquidation on exit days. | **PASSED.** Forced rollover logic verified; zero stranded positions; median hold duration preserved at 1.0 day. |
-| **5** | **Slippage Sensitivity Stress (Up to 100 bps)** | Evaluated performance degradation across escalating slippage: $30 \to 60 \to 80 \to 100\text{ bps}$ ($1.0\%$ round-trip). | **PASSED.** Even at $100\text{ bps}$ ($+66\%$ above base), engine delivered **$+31.2\%\text{ ROI}$** and **$2.34\text{ PF}$**. |
-| **6** | **Point-in-Time Causality & Timestamp Audit** | Audited all 857,928 corporate announcements to verify zero intraday information leakage. | **PASSED.** Filtered to 345,143 clean pairs; decisions strictly bound to pre-open information set $F_{t-}$. |
-| **7** | **Walk-Forward Out-of-Sample Regime Test** | Evaluated parameter stability across 649 trading sessions (untouched 12M forward OOS window). | **PASSED.** Maintained **$59.0\%\text{ WR}$**, **$2.96\text{ PF}$**, and **$4.64\%\text{ MDD}$**, proving zero parameter decay. |
-
----
-
-## Repository Structure
+## Repository structure
 
 ```text
 bse-quant-engine/
-├── .github/
-│   └── workflows/
-│       └── audit.yml             # Automated CI pipeline running metric verification
+├── .github/workflows/audit.yml   # CI workflow executing verify_metrics.py and run_backtest_demo.py
 ├── core/
 │   ├── __init__.py
-│   ├── engine.py                 # Causal event-driven market loop & abstract alpha interface
-│   ├── friction.py               # Indian statutory tax, fee, and slippage accounting model
-│   ├── risk.py                   # Pre-open equity snapshots, slot allocation & integer sizing
-│   └── execution.py              # Gap-through stop execution & circuit freeze rollover handler
+│   ├── engine.py                 # 3-phase causal event-driven loop and BaseAlphaModel contract
+│   ├── execution.py              # Gap-through stop fills and circuit rollover logic
+│   ├── friction.py               # 8-item Indian delivery tax, fee, and slippage model
+│   └── risk.py                   # Pre-open equity snapshots, 3-slot cap, and integer share sizing
 ├── data/
-│   ├── audit_trades_12m_oos.csv  # Verified 61-trade execution ledger (12M Out-of-Sample)
-│   ├── audit_equity_12m_oos.csv  # Daily Mark-to-Market equity curve & drawdown series (12M)
-│   ├── audit_trades_24m_full.csv # Verified 118-trade execution ledger (24M Multi-Year Horizon)
-│   ├── audit_equity_24m_full.csv # Daily Mark-to-Market equity curve & drawdown series (24M)
-│   └── summary_metrics.json      # Machine-readable performance tear sheet
+│   ├── audit_equity_12m_oos.csv  # Daily MTM equity and drawdown series (231 sessions)
+│   ├── audit_equity_24m_full.csv # Daily MTM equity and drawdown series (481 sessions)
+│   ├── audit_trades_12m_oos.csv  # Verified 61-trade execution ledger (12M OOS)
+│   ├── audit_trades_24m_full.csv # Verified 118-trade execution ledger (24M horizon)
+│   └── summary_metrics.json      # Machine-readable verified summary metrics
 ├── docs/
-│   ├── ARCHITECTURE.md           # Discrete event lifecycle, causality, and mathematical models
-│   ├── AUDIT_LOGS.md             # Forensic audit logs: Gen 1-10 & Config A-E evolution
-│   └── METHODOLOGY.md            # Dataset sanitization, FDR correction, and formulas
-├── verify_metrics.py             # Standalone, zero-dependency metric audit harness
-├── run_backtest_demo.py          # Interactive execution engine demo
-├── requirements.txt              # Optional dependencies for extended data analysis
-├── .gitignore                    # Git configuration
-├── LICENSE                       # Proprietary Research License
-└── README.md                     # Institutional documentation
+│   ├── ARCHITECTURE.md           # Daily event lifecycle and mathematical execution rules
+│   ├── AUDIT_LOGS.md             # Multi-agent red-team audit rounds and 6-bug remediation log
+│   └── METHODOLOGY.md            # Filing ingestion, FDR filtering, ranking, and formulas
+├── run_backtest_demo.py          # Synthetic 3-asset execution engine demo
+├── verify_metrics.py             # Zero-dependency ledger verification script
+├── requirements.txt              # Optional data-analysis dependencies
+└── LICENSE                       # Proprietary Research & Evaluation License
 ```
+
+For deeper technical details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/AUDIT_LOGS.md](docs/AUDIT_LOGS.md), and [docs/METHODOLOGY.md](docs/METHODOLOGY.md).
 
 ---
 
-## Intellectual Property & Alpha Disclaimer
+## Intellectual property notice
 
-This repository is published for **academic, recruitment, and forensic verification audit purposes**. 
-
-The proprietary Natural Language Processing (NLP) corporate announcement classifier, regex token taxonomy, and specific multi-factor alpha weighting vectors developed during this research are retained as confidential trade secrets. The complete institutional backtesting engine, execution microstructure framework, and trade-by-trade audit tear sheets are provided in full to substantiate every claim on the author's technical dossier.
+This repository is published for academic review, technical evaluation, and metric verification under [LICENSE](LICENSE). The proprietary NLP token taxonomy, regex catalyst triggers, and exact signal entry thresholds are retained privately, while the full causal execution engine, friction model, audit logs, and anonymized trade and equity ledgers are public.
 
 ---
 
 ## Author
 
-**Shaik Vahid Basha**  
-*Undergraduate Researcher & Quantitative Strategist*  
-Indian Institute of Technology Madras (IIT Madras) — Civil Engineering (Graduating 2027)  
-GitHub: [@vahid-kanna](https://github.com/vahid-kanna)
+Shaik Vahid Basha  
+Undergraduate Researcher, Indian Institute of Technology Madras (IIT Madras), Civil Engineering (Graduating 2027)  
+GitHub: [@vahid-kanna](https://github.com/vahid-kanna) | Portfolio: [vahidbasha.me](https://vahidbasha.me)

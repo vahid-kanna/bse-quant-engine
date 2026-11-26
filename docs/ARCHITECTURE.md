@@ -21,15 +21,15 @@ The framework models discrete event dynamics on Indian cash equity markets (BSE/
 ## 1. Causal Event Loop Breakdown
 
 ### Phase 1: 09:15 AM Pre-Open Allocation & Capital Snapshot
-- **Information Set ($F_{t-}$):** Sizing calculations use strictly historical closing marks and prior uncommitted cash balances.
-- **Pre-Market Cash Lock:** Any capital tied up in open positions exiting on day $T$ cannot be redeployed on day $T$ morning.
-- **Integer Share Allocation:**
+- Information Set ($F_{t-}$): Sizing calculations use strictly historical closing marks and prior uncommitted cash balances.
+- Pre-Market Cash Lock: Any capital tied up in open positions exiting on day $T$ cannot be redeployed on day $T$ morning.
+- Integer Share Allocation:
   $$\text{Shares} = \left\lfloor \frac{\min\left(\frac{\text{Pre-Open Equity}}{\text{Max Slots}}, \, 0.10 \times \text{ADV}_{20} \times P_{\text{close}, t-1}\right)}{P_{\text{open}, t}} \right\rfloor$$
   Fractional equity shares are strictly disallowed.
 
 ### Phase 2: 15:15 PM Intraday Execution & Microstructure Stops
-- **Realistic Gap-Through Stop Execution:** If the opening auction gaps below a predetermined stop price, the trade fills at $P_{\text{open}}$ (the actual traded price), not the theoretical stop-loss mark.
-- **Illiquidity Circuit Rollover:** If a stock hits a circuit freeze ($P_{\text{high}} = P_{\text{low}}$) on its scheduled liquidation date, liquidation is prohibited in that session and the position rolls forward into subsequent trading days until continuous two-sided liquidity is restored.
+- Realistic Gap-Through Stop Execution: If the opening auction gaps below a predetermined stop price, the trade fills at $P_{\text{open}}$ (the actual traded price), not the theoretical stop-loss mark.
+- Illiquidity Circuit Rollover: If a stock hits a circuit freeze ($P_{\text{high}} = P_{\text{low}}$) on its scheduled liquidation date, liquidation is prohibited in that session and the position rolls forward into subsequent trading days until continuous two-sided liquidity is restored.
 
 ### Phase 3: 15:30 PM True Daily Mark-to-Market (MTM) Portfolio Valuation
 - Portfolio equity is marked strictly on each constituent's actual session close price:
